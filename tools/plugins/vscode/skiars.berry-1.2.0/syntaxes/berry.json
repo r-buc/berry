@@ -174,13 +174,13 @@
         "identifier": {
             "patterns": [{
                 "name": "identifier.berry",
-                "match": "\\b[_A-Za-z]\\w*\\b"
+                "match": "(?<![0-9A-Za-z_])[_A-Za-z][_A-Za-z0-9]*(?![0-9A-Za-z_])"
             }]
         },
         "number": {
             "patterns": [{
                 "name": "constant.numeric.berry",
-                "match": "\\b0[xX][a-fA-F0-9]+\\b|\\b\\d+[eE][+-]?\\d+\\b|\\b(?:\\d+\\.\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?\\b|\\b\\d+\\b"
+                "match": "(?<![0-9A-Za-z_])(?:0[xX][a-fA-F0-9]+|\\d+[eE][+-]?\\d+|(?:\\d+\\.\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?|\\d+)(?![0-9A-Za-z_])"
             }]
         },
         "operator": {
