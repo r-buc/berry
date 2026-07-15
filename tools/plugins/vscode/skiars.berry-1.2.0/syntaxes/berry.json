@@ -18,6 +18,9 @@
             "include": "#keywords"
         },
         {
+            "include": "#constants"
+        },
+        {
             "include": "#function"
         },
         {
@@ -52,7 +55,7 @@
                             "patterns": [
                                 {
                                     "name": "constant.character.escape.berry",
-                                    "match": "(\\\\x[\\h]{2})|(\\\\[0-7]{3})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
+                                    "match": "(\\\\x[0-9A-Fa-f]{2})|(\\\\[0-7]{3})|(\\\\u[0-9A-Fa-f]{4})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
                                 },
                                 {
                                     "name": "string.quoted.other.berry",
@@ -67,7 +70,10 @@
                                             "include": "#keywords"
                                         },
                                         {
-                                            "include": "#numbers"
+                                            "include": "#constants"
+                                        },
+                                        {
+                                            "include": "#number"
                                         },
                                         {
                                             "include": "#identifier"
@@ -92,7 +98,7 @@
                             "patterns": [
                                 {
                                 "name": "constant.character.escape.berry",
-                                "match": "(\\\\x[\\h]{2})|(\\\\[0-7]{3})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
+                                "match": "(\\\\x[0-9A-Fa-f]{2})|(\\\\[0-7]{3})|(\\\\u[0-9A-Fa-f]{4})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
                                 },
                                 {
                                     "name": "string.quoted.other.berry",
@@ -107,7 +113,10 @@
                                             "include": "#keywords"
                                         },
                                         {
-                                            "include": "#numbers"
+                                            "include": "#constants"
+                                        },
+                                        {
+                                            "include": "#number"
                                         },
                                         {
                                             "include": "#identifier"
@@ -133,7 +142,7 @@
                     "end": "\\1",
                     "patterns": [{
                         "name": "constant.character.escape.berry",
-                        "match": "(\\\\x[\\h]{2})|(\\\\[0-7]{3})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
+                        "match": "(\\\\x[0-9A-Fa-f]{2})|(\\\\[0-7]{3})|(\\\\u[0-9A-Fa-f]{4})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
                     }]
                 }
             ]
@@ -153,25 +162,31 @@
         "keywords": {
             "patterns": [{
                 "name": "keyword.berry",
-                "match": "\\b(var|static|def|class|true|false|nil|self|super|import|as|_class)\\b"
+                "match": "\\b(var|static|def|class|import|as|_class)\\b"
+            }]
+        },
+        "constants": {
+            "patterns": [{
+                "name": "constant.language.berry",
+                "match": "\\b(true|false|nil|self|super)\\b"
             }]
         },
         "identifier": {
             "patterns": [{
                 "name": "identifier.berry",
-                "match": "\\b[_A-Za-z]\\w+\\b"
+                "match": "\\b[_A-Za-z]\\w*\\b"
             }]
         },
         "number": {
             "patterns": [{
                 "name": "constant.numeric.berry",
-                "match": "0x[a-fA-F0-9]+|\\d+|(\\d+\\.?|\\.\\d)\\d*([eE][+-]?\\d+)?"
+                "match": "\\b0[xX][a-fA-F0-9]+\\b|\\b\\d+[eE][+-]?\\d+\\b|\\b(?:\\d+\\.\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?\\b|\\b\\d+\\b"
             }]
         },
         "operator": {
             "patterns": [{
                 "name": "keyword.operator.berry",
-                "match": "\\(|\\)|\\[|\\]|\\.|-|\\!|~|\\*|/|%|\\+|&|\\^|\\||<|>|=|:"
+                "match": "<<=|>>=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|==|!=|<=|>=|<<|>>|\\|\\||&&|\\.\\.|:=|->|[\\(\\)\\[\\]\\{\\}\\.\\-!~\\*/%\\+&\\^\\|<>=:,;\\?]"
             }]
         },
         "member": {
