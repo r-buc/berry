@@ -211,13 +211,13 @@
         "identifier": {
             "patterns": [{
                 "name": "identifier.berry",
-                "match": "(?<!\\w)[_A-Za-z]\\w*(?!\\w)"
+                "match": "(?<![A-Za-z0-9_])[_A-Za-z][A-Za-z0-9_]*(?![A-Za-z0-9_])"
             }]
         },
         "number": {
             "patterns": [{
                 "name": "constant.numeric.berry",
-                "match": "(?<!\\w)(?:0[xX][a-fA-F0-9]+|(?:\\d+\\.\\d*|\\.\\d+|\\d+)(?:[eE][+-]?\\d+)?)(?!\\w)"
+                "match": "(?<![A-Za-z0-9_])(?:0[xX][a-fA-F0-9]+|(?:\\d+\\.\\d*|\\.\\d+|\\d+)(?:[eE][+-]?\\d+)?)(?![A-Za-z0-9_])"
             }]
         },
         "operator": {
