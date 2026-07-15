@@ -21,6 +21,8 @@ const tokenModifiers = [
     "declaration",
     "static"
 ];
+const tokenTypeMap = new Map(tokenTypes.map((tokenType, index) => [tokenType, index]));
+const tokenModifierMap = new Map(tokenModifiers.map((tokenModifier, index) => [tokenModifier, index]));
 
 const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
 
@@ -38,7 +40,7 @@ const operators = [
 const singleCharOperators = new Set(["(", ")", "[", "]", "{", "}", ".", "-", "!", "~", "*", "/", "%", "+", "&", "^", "|", "<", ">", "=", ":", ",", ";", "?"]);
 const IDENT_START_RE = /[A-Za-z_]/;
 const IDENT_PART_RE = /[A-Za-z0-9_]/;
-const NUMBER_RE = /^(?:0[xX][A-Fa-f0-9]+|\d+[eE][+-]?\d+|(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?|\d+)/;
+const NUMBER_RE = /^(?:0[xX][A-Fa-f0-9]+|(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?)/;
 
 function isIdentStart(ch) {
     return IDENT_START_RE.test(ch);
@@ -200,7 +202,15 @@ function pushToken(builder, line, start, length, type, modifiers = []) {
     if (length <= 0) {
         return;
     }
-    builder.push(line, start, length, tokenTypes.indexOf(type), modifiers.reduce((bits, m) => bits | (1 << tokenModifiers.indexOf(m)), 0));
+    const tokenType = tokenTypeMap.get(type);
+    if (tokenType === undefined) {
+        return;
+    }
+    const modifierBits = modifiers.reduce((bits, modifier) => {
+        const modifierIndex = tokenModifierMap.get(modifier);
+        return modifierIndex === undefined ? bits : bits | (1 << modifierIndex);
+    }, 0);
+    builder.push(line, start, length, tokenType, modifierBits);
 }
 
 function buildSemanticTokens(document) {
@@ -299,8 +309,6 @@ function buildSemanticTokens(document) {
                 activeBlocks.push(word);
             } else if (word === "end" && activeBlocks.length) {
                 activeBlocks.pop();
-            } else if (word === "as" && importLine === token.line) {
-                continue;
             }
             continue;
         }
