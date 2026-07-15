@@ -36,13 +36,16 @@ const operators = [
     "==", "!=", "<=", ">=", "<<", ">>", "&&", "||", "..", ":=", "->"
 ];
 const singleCharOperators = new Set(["(", ")", "[", "]", "{", "}", ".", "-", "!", "~", "*", "/", "%", "+", "&", "^", "|", "<", ">", "=", ":", ",", ";", "?"]);
+const IDENT_START_RE = /[A-Za-z_]/;
+const IDENT_PART_RE = /[A-Za-z0-9_]/;
+const NUMBER_RE = /^(?:0[xX][A-Fa-f0-9]+|\d+[eE][+-]?\d+|(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?|\d+)/;
 
 function isIdentStart(ch) {
-    return /[A-Za-z_]/.test(ch);
+    return IDENT_START_RE.test(ch);
 }
 
 function isIdentPart(ch) {
-    return /[A-Za-z0-9_]/.test(ch);
+    return IDENT_PART_RE.test(ch);
 }
 
 function tokenizeDocument(text) {
@@ -139,7 +142,7 @@ function tokenizeDocument(text) {
                 continue;
             }
 
-            const numberMatch = line.slice(i).match(/^(?:0[xX][A-Fa-f0-9]+|\d+[eE][+-]?\d+|(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?|\d+)/);
+            const numberMatch = line.slice(i).match(NUMBER_RE);
             if (numberMatch) {
                 tokens.push({ kind: "number", line: lineIndex, start: i, length: numberMatch[0].length, text: numberMatch[0] });
                 i += numberMatch[0].length;
@@ -198,23 +201,6 @@ function pushToken(builder, line, start, length, type, modifiers = []) {
         return;
     }
     builder.push(line, start, length, tokenTypes.indexOf(type), modifiers.reduce((bits, m) => bits | (1 << tokenModifiers.indexOf(m)), 0));
-}
-
-function pushMultilineToken(builder, token, type) {
-    if (token.endLine === undefined || token.endChar === undefined) {
-        pushToken(builder, token.line, token.start, token.length, type);
-        return;
-    }
-    if (token.line === token.endLine) {
-        pushToken(builder, token.line, token.start, token.endChar - token.start, type);
-        return;
-    }
-
-    pushToken(builder, token.line, token.start, Number.MAX_SAFE_INTEGER, type);
-    for (let line = token.line + 1; line < token.endLine; line++) {
-        pushToken(builder, line, 0, Number.MAX_SAFE_INTEGER, type);
-    }
-    pushToken(builder, token.endLine, 0, token.endChar, type);
 }
 
 function buildSemanticTokens(document) {

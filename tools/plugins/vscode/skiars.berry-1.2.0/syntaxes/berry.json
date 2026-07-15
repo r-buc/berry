@@ -145,9 +145,43 @@
             ]
         },
         "escape-sequence": {
+            "patterns": [
+                {
+                    "include": "#escape-hex"
+                },
+                {
+                    "include": "#escape-octal"
+                },
+                {
+                    "include": "#escape-unicode"
+                },
+                {
+                    "include": "#escape-special"
+                }
+            ]
+        },
+        "escape-hex": {
             "patterns": [{
                 "name": "constant.character.escape.berry",
-                "match": "(\\\\x[0-9A-Fa-f]{2})|(\\\\[0-7]{3})|(\\\\u[0-9A-Fa-f]{4})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
+                "match": "\\\\x[0-9A-Fa-f]{2}"
+            }]
+        },
+        "escape-octal": {
+            "patterns": [{
+                "name": "constant.character.escape.berry",
+                "match": "\\\\[0-7]{3}"
+            }]
+        },
+        "escape-unicode": {
+            "patterns": [{
+                "name": "constant.character.escape.berry",
+                "match": "\\\\u[0-9A-Fa-f]{4}"
+            }]
+        },
+        "escape-special": {
+            "patterns": [{
+                "name": "constant.character.escape.berry",
+                "match": "\\\\[\\\\\"'abfnrtv]"
             }]
         },
         "comment-block": {
