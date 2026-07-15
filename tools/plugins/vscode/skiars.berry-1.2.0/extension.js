@@ -228,11 +228,15 @@ function buildSemanticTokens(document) {
                 while (offset < endOffset) {
                     const pos = document.positionAt(offset);
                     const lineEnd = document.lineAt(pos.line).range.end.character;
-                    const length = Math.min(endOffset - offset, lineEnd - pos.character);
+                    const lineEndOffset = document.offsetAt(new vscode.Position(pos.line, lineEnd));
+                    const length = Math.min(lineEndOffset - offset, endOffset - offset);
                     if (length > 0) {
                         pushToken(builder, pos.line, pos.character, length, "comment");
                     }
-                    offset = document.offsetAt(new vscode.Position(pos.line, lineEnd)) + 1;
+                    if (pos.line >= document.lineCount - 1) {
+                        break;
+                    }
+                    offset = document.offsetAt(new vscode.Position(pos.line + 1, 0));
                 }
             } else {
                 pushToken(builder, token.line, token.start, token.length, "comment");

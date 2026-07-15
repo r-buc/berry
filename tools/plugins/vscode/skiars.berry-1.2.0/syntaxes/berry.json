@@ -217,7 +217,7 @@
         "number": {
             "patterns": [{
                 "name": "constant.numeric.berry",
-                "match": "(?<!\\w)(?:0[xX][a-fA-F0-9]+|\\d+[eE][+-]?\\d+|(?:\\d+\\.\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?|\\d+)(?!\\w)"
+                "match": "(?<!\\w)(?:0[xX][a-fA-F0-9]+|(?:\\d+\\.\\d*|\\.\\d+|\\d+)(?:[eE][+-]?\\d+)?)(?!\\w)"
             }]
         },
         "operator": {
