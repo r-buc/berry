@@ -3,6 +3,10 @@
     "displayName": "Berry Script Language",
     "description": "A small embedded script language.",
     "version": "1.2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/r-buc/berry.git"
+    },
     "icon": "berry-icon.png",
     "publisher": "skiars",
     "main": "./extension.js",
