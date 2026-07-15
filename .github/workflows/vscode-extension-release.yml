@@ -2,8 +2,11 @@ name: VSCode Extension Release
 
 on:
   push:
-    tags:
-      - 'vscode-v*'
+    paths:
+      - 'tools/plugins/vscode/skiars.berry-1.2.0/**'
+  pull_request:
+    paths:
+      - 'tools/plugins/vscode/skiars.berry-1.2.0/**'
   workflow_dispatch:
 
 jobs:
@@ -34,7 +37,7 @@ jobs:
           path: tools/plugins/vscode/skiars.berry-1.2.0/*.vsix
 
       - name: Upload release asset
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/vscode-v')
         uses: softprops/action-gh-release@v2
         with:
           files: tools/plugins/vscode/skiars.berry-1.2.0/*.vsix
