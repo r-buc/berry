@@ -5,9 +5,13 @@
     "version": "1.2.0",
     "icon": "berry-icon.png",
     "publisher": "skiars",
+    "main": "./extension.js",
     "engines": {
-        "vscode": "^1.15.1"
+        "vscode": "^1.74.0"
     },
+    "activationEvents": [
+        "onLanguage:berry"
+    ],
     "categories": [
         "Programming Languages"
     ],
@@ -31,7 +35,12 @@
                 "scopeName": "source.berry",
                 "path": "./syntaxes/berry.json"
             }
-        ]
+        ],
+        "configurationDefaults": {
+            "[berry]": {
+                "editor.semanticHighlighting.enabled": true
+            }
+        }
     },
     "__metadata": null
 }
