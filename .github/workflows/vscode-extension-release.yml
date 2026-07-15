@@ -1,0 +1,34 @@
+name: VSCode Extension Release
+
+on:
+  push:
+    tags:
+      - 'vscode-v*'
+  workflow_dispatch:
+
+jobs:
+  package-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Package extension
+        working-directory: tools/plugins/vscode/skiars.berry-1.2.0
+        run: vsce package --no-dependencies
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: tools/plugins/vscode/skiars.berry-1.2.0/*.vsix
+          generate_release_notes: true
