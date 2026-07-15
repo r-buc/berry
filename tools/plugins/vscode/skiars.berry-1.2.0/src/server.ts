@@ -9,7 +9,8 @@
  *   • Document symbols (outline)
  *   • Signature help
  *   • Find references
- *   • Diagnostics (unmatched blocks, basic syntax errors)
+ *   • Rename symbol
+ *   • Diagnostics (unmatched blocks, basic syntax errors, undefined identifiers)
  */
 
 import {
@@ -43,6 +44,9 @@ import {
     ParameterInformation,
     Range,
     Position,
+    RenameParams,
+    WorkspaceEdit,
+    TextEdit,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -61,8 +65,22 @@ import {
 } from './builtins';
 
 // ---------------------------------------------------------------------------
-// Connection & document manager
+// Built-in name registry (used for undefined-identifier diagnostics)
 // ---------------------------------------------------------------------------
+
+/**
+ * Set of all built-in identifier names that are always available without
+ * being declared in the current file (global functions + importable modules).
+ * Method names (string/list/map) are accessed through objects and are not
+ * included here.
+ */
+const KNOWN_BUILTIN_NAMES = new Set<string>([
+    ...GLOBAL_FUNCTIONS.map(f => f.name),
+    ...MODULE_NAMES,
+]);
+
+/** Assignment operators: presence as the *next* token marks the prior identifier as an assignment target. */
+const ASSIGN_OPS = new Set(['=', ':=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>=']);
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments<TextDocument>(TextDocument);
@@ -153,6 +171,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
                 legend: SEMANTIC_LEGEND,
                 full: true,
             },
+            renameProvider: true,
         },
     };
 });
@@ -259,7 +278,102 @@ async function validateDocument(doc: TextDocument): Promise<void> {
         }
     }
 
+    // Report undefined identifier references (Warning severity — Berry is dynamic
+    // and identifiers may come from imports or runtime globals not visible here)
+    const declaredNames = new Set<string>(parsed.symbols.map(s => s.name));
+    const implicitDecls = collectImplicitDeclarations(parsed.tokens);
+    const toks = parsed.tokens;
+
+    for (let idx = 0; idx < toks.length; idx++) {
+        const t = toks[idx];
+        if (t.kind !== 'identifier') continue;
+
+        // Skip member-access targets (identifier after '.')
+        const prev = toks[idx - 1];
+        if (prev && prev.kind === 'operator' && prev.text === '.') continue;
+
+        // Skip identifiers that are declared, built-in, or implicitly assigned
+        if (declaredNames.has(t.text)) continue;
+        if (KNOWN_BUILTIN_NAMES.has(t.text)) continue;
+        if (implicitDecls.has(t.text)) continue;
+
+        diagnostics.push({
+            severity: DiagnosticSeverity.Warning,
+            range: {
+                start: { line: t.line, character: t.start },
+                end:   { line: t.line, character: t.start + t.length },
+            },
+            message: `Identifier '${t.text}' is not defined.`,
+            source: 'berry',
+        });
+    }
+
     connection.sendDiagnostics({ uri: doc.uri, diagnostics });
+}
+
+/**
+ * Collects identifier names that are implicitly declared — not via
+ * `var`/`def`/`class`/`import`, but through bare assignment, `for` loop
+ * variables, `except` variables, or the lambda-shorthand `/ param ->` syntax.
+ */
+function collectImplicitDeclarations(tokens: Token[]): Set<string> {
+    const implicit = new Set<string>();
+
+    for (let i = 0; i < tokens.length; i++) {
+        const t = tokens[i];
+
+        // LHS of any assignment operator: x = ..., x += ..., x := ...
+        if (t.kind === 'identifier') {
+            const prev = tokens[i - 1];
+            const next = tokens[i + 1];
+            if (next && next.kind === 'operator' && ASSIGN_OPS.has(next.text)) {
+                if (!prev || !(prev.kind === 'operator' && prev.text === '.')) {
+                    implicit.add(t.text);
+                }
+            }
+        }
+
+        // for <ident> [, <ident>]* : <iterable>
+        if (t.kind === 'keyword' && t.text === 'for') {
+            let j = i + 1;
+            while (j < tokens.length) {
+                const ft = tokens[j];
+                if (ft.kind === 'identifier') { implicit.add(ft.text); j++; }
+                else if (ft.kind === 'operator' && ft.text === ',') { j++; }
+                else { break; }
+            }
+        }
+
+        // except [...] as <ident>
+        if (t.kind === 'keyword' && t.text === 'as') {
+            const next = tokens[i + 1];
+            if (next && next.kind === 'identifier') {
+                implicit.add(next.text);
+            }
+        }
+
+        // Lambda shorthand:  / <ident> [, <ident>]* ->  body
+        if (t.kind === 'operator' && t.text === '/') {
+            // Look ahead (limited) for '->' to confirm this is a lambda, not division
+            let hasArrow = false;
+            for (let j = i + 1; j < tokens.length && j < i + 10; j++) {
+                if (tokens[j].kind === 'operator' && tokens[j].text === '->') { hasArrow = true; break; }
+                if (tokens[j].kind === 'identifier' || (tokens[j].kind === 'operator' && tokens[j].text === ',')) continue;
+                break;
+            }
+            if (hasArrow) {
+                let j = i + 1;
+                while (j < tokens.length) {
+                    const lt = tokens[j];
+                    if (lt.kind === 'identifier') { implicit.add(lt.text); j++; }
+                    else if (lt.kind === 'operator' && lt.text === ',') { j++; }
+                    else { break; }
+                }
+            }
+        }
+    }
+
+    return implicit;
 }
 
 // ---------------------------------------------------------------------------
@@ -871,6 +985,40 @@ connection.onSignatureHelp((params: SignatureHelpParams): SignatureHelp | null =
         activeSignature: 0,
         activeParameter: Math.min(activeParam, Math.max(0, paramInfos.length - 1)),
     };
+});
+
+// ---------------------------------------------------------------------------
+// Rename
+// ---------------------------------------------------------------------------
+
+connection.onRenameRequest((params: RenameParams): WorkspaceEdit | null => {
+    const doc = documents.get(params.textDocument.uri);
+    if (!doc) return null;
+
+    const parsed = getParsed(doc.uri) ?? parseAndCache(doc);
+    const { line, character } = params.position;
+    const tok = tokenAtPosition(parsed.tokens, line, character);
+    if (!tok || tok.kind !== 'identifier') return null;
+
+    const oldName = tok.text;
+    const newName = params.newName.trim();
+    if (!newName || newName === oldName) return null;
+
+    const edits: TextEdit[] = [];
+    for (const t of parsed.tokens) {
+        if (t.kind === 'identifier' && t.text === oldName) {
+            edits.push(TextEdit.replace(
+                Range.create(
+                    { line: t.line, character: t.start },
+                    { line: t.line, character: t.start + t.length },
+                ),
+                newName,
+            ));
+        }
+    }
+
+    if (edits.length === 0) return null;
+    return { changes: { [doc.uri]: edits } };
 });
 
 // ---------------------------------------------------------------------------

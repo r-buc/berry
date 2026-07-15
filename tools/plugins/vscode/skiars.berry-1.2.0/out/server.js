@@ -3479,7 +3479,7 @@ var require_main2 = __commonJS({
         ColorPresentation2.create = create;
         function is(value) {
           var candidate = value;
-          return Is.objectLiteral(candidate) && Is.string(candidate.label) && (Is.undefined(candidate.textEdit) || TextEdit.is(candidate)) && (Is.undefined(candidate.additionalTextEdits) || Is.typedArray(candidate.additionalTextEdits, TextEdit.is));
+          return Is.objectLiteral(candidate) && Is.string(candidate.label) && (Is.undefined(candidate.textEdit) || TextEdit2.is(candidate)) && (Is.undefined(candidate.additionalTextEdits) || Is.typedArray(candidate.additionalTextEdits, TextEdit2.is));
         }
         ColorPresentation2.is = is;
       })(ColorPresentation || (exports3.ColorPresentation = ColorPresentation = {}));
@@ -3598,26 +3598,26 @@ var require_main2 = __commonJS({
         }
         Command2.is = is;
       })(Command || (exports3.Command = Command = {}));
-      var TextEdit;
-      (function(TextEdit2) {
+      var TextEdit2;
+      (function(TextEdit3) {
         function replace(range, newText) {
           return { range, newText };
         }
-        TextEdit2.replace = replace;
+        TextEdit3.replace = replace;
         function insert(position, newText) {
           return { range: { start: position, end: position }, newText };
         }
-        TextEdit2.insert = insert;
+        TextEdit3.insert = insert;
         function del(range) {
           return { range, newText: "" };
         }
-        TextEdit2.del = del;
+        TextEdit3.del = del;
         function is(value) {
           var candidate = value;
           return Is.objectLiteral(candidate) && Is.string(candidate.newText) && Range2.is(candidate.range);
         }
-        TextEdit2.is = is;
-      })(TextEdit || (exports3.TextEdit = TextEdit = {}));
+        TextEdit3.is = is;
+      })(TextEdit2 || (exports3.TextEdit = TextEdit2 = {}));
       var ChangeAnnotation;
       (function(ChangeAnnotation2) {
         function create(label, needsConfirmation, description) {
@@ -3661,7 +3661,7 @@ var require_main2 = __commonJS({
         AnnotatedTextEdit2.del = del;
         function is(value) {
           var candidate = value;
-          return TextEdit.is(candidate) && (ChangeAnnotation.is(candidate.annotationId) || ChangeAnnotationIdentifier.is(candidate.annotationId));
+          return TextEdit2.is(candidate) && (ChangeAnnotation.is(candidate.annotationId) || ChangeAnnotationIdentifier.is(candidate.annotationId));
         }
         AnnotatedTextEdit2.is = is;
       })(AnnotatedTextEdit || (exports3.AnnotatedTextEdit = AnnotatedTextEdit = {}));
@@ -3744,8 +3744,8 @@ var require_main2 = __commonJS({
         }
         DeleteFile2.is = is;
       })(DeleteFile || (exports3.DeleteFile = DeleteFile = {}));
-      var WorkspaceEdit;
-      (function(WorkspaceEdit2) {
+      var WorkspaceEdit2;
+      (function(WorkspaceEdit3) {
         function is(value) {
           var candidate = value;
           return candidate && (candidate.changes !== void 0 || candidate.documentChanges !== void 0) && (candidate.documentChanges === void 0 || candidate.documentChanges.every(function(change) {
@@ -3756,8 +3756,8 @@ var require_main2 = __commonJS({
             }
           }));
         }
-        WorkspaceEdit2.is = is;
-      })(WorkspaceEdit || (exports3.WorkspaceEdit = WorkspaceEdit = {}));
+        WorkspaceEdit3.is = is;
+      })(WorkspaceEdit2 || (exports3.WorkspaceEdit = WorkspaceEdit2 = {}));
       var TextEditChangeImpl = (
         /** @class */
         (function() {
@@ -3769,7 +3769,7 @@ var require_main2 = __commonJS({
             var edit;
             var id;
             if (annotation === void 0) {
-              edit = TextEdit.insert(position, newText);
+              edit = TextEdit2.insert(position, newText);
             } else if (ChangeAnnotationIdentifier.is(annotation)) {
               id = annotation;
               edit = AnnotatedTextEdit.insert(position, newText, annotation);
@@ -3787,7 +3787,7 @@ var require_main2 = __commonJS({
             var edit;
             var id;
             if (annotation === void 0) {
-              edit = TextEdit.replace(range, newText);
+              edit = TextEdit2.replace(range, newText);
             } else if (ChangeAnnotationIdentifier.is(annotation)) {
               id = annotation;
               edit = AnnotatedTextEdit.replace(range, newText, annotation);
@@ -3805,7 +3805,7 @@ var require_main2 = __commonJS({
             var edit;
             var id;
             if (annotation === void 0) {
-              edit = TextEdit.del(range);
+              edit = TextEdit2.del(range);
             } else if (ChangeAnnotationIdentifier.is(annotation)) {
               id = annotation;
               edit = AnnotatedTextEdit.del(range, annotation);
@@ -4387,7 +4387,7 @@ var require_main2 = __commonJS({
         CodeAction2.create = create;
         function is(value) {
           var candidate = value;
-          return candidate && Is.string(candidate.title) && (candidate.diagnostics === void 0 || Is.typedArray(candidate.diagnostics, Diagnostic2.is)) && (candidate.kind === void 0 || Is.string(candidate.kind)) && (candidate.edit !== void 0 || candidate.command !== void 0) && (candidate.command === void 0 || Command.is(candidate.command)) && (candidate.isPreferred === void 0 || Is.boolean(candidate.isPreferred)) && (candidate.edit === void 0 || WorkspaceEdit.is(candidate.edit));
+          return candidate && Is.string(candidate.title) && (candidate.diagnostics === void 0 || Is.typedArray(candidate.diagnostics, Diagnostic2.is)) && (candidate.kind === void 0 || Is.string(candidate.kind)) && (candidate.edit !== void 0 || candidate.command !== void 0) && (candidate.command === void 0 || Command.is(candidate.command)) && (candidate.isPreferred === void 0 || Is.boolean(candidate.isPreferred)) && (candidate.edit === void 0 || WorkspaceEdit2.is(candidate.edit));
         }
         CodeAction2.is = is;
       })(CodeAction || (exports3.CodeAction = CodeAction = {}));
@@ -4571,7 +4571,7 @@ var require_main2 = __commonJS({
         InlayHint2.create = create;
         function is(value) {
           var candidate = value;
-          return Is.objectLiteral(candidate) && Position2.is(candidate.position) && (Is.string(candidate.label) || Is.typedArray(candidate.label, InlayHintLabelPart.is)) && (candidate.kind === void 0 || InlayHintKind.is(candidate.kind)) && candidate.textEdits === void 0 || Is.typedArray(candidate.textEdits, TextEdit.is) && (candidate.tooltip === void 0 || Is.string(candidate.tooltip) || MarkupContent.is(candidate.tooltip)) && (candidate.paddingLeft === void 0 || Is.boolean(candidate.paddingLeft)) && (candidate.paddingRight === void 0 || Is.boolean(candidate.paddingRight));
+          return Is.objectLiteral(candidate) && Position2.is(candidate.position) && (Is.string(candidate.label) || Is.typedArray(candidate.label, InlayHintLabelPart.is)) && (candidate.kind === void 0 || InlayHintKind.is(candidate.kind)) && candidate.textEdits === void 0 || Is.typedArray(candidate.textEdits, TextEdit2.is) && (candidate.tooltip === void 0 || Is.string(candidate.tooltip) || MarkupContent.is(candidate.tooltip)) && (candidate.paddingLeft === void 0 || Is.boolean(candidate.paddingLeft)) && (candidate.paddingRight === void 0 || Is.boolean(candidate.paddingRight));
         }
         InlayHint2.is = is;
       })(InlayHint || (exports3.InlayHint = InlayHint = {}));
@@ -10541,6 +10541,11 @@ var KEYWORDS = [
 ];
 
 // src/server.ts
+var KNOWN_BUILTIN_NAMES = /* @__PURE__ */ new Set([
+  ...GLOBAL_FUNCTIONS.map((f) => f.name),
+  ...MODULE_NAMES
+]);
+var ASSIGN_OPS = /* @__PURE__ */ new Set(["=", ":=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="]);
 var connection = (0, import_node.createConnection)(import_node.ProposedFeatures.all);
 var documents = new import_node.TextDocuments(TextDocument);
 var parsedCache = /* @__PURE__ */ new Map();
@@ -10614,7 +10619,8 @@ connection.onInitialize((params) => {
       semanticTokensProvider: {
         legend: SEMANTIC_LEGEND,
         full: true
-      }
+      },
+      renameProvider: true
     }
   };
 });
@@ -10698,7 +10704,89 @@ async function validateDocument(doc) {
       }
     }
   }
+  const declaredNames = new Set(parsed.symbols.map((s) => s.name));
+  const implicitDecls = collectImplicitDeclarations(parsed.tokens);
+  const toks = parsed.tokens;
+  for (let idx = 0; idx < toks.length; idx++) {
+    const t = toks[idx];
+    if (t.kind !== "identifier") continue;
+    const prev = toks[idx - 1];
+    if (prev && prev.kind === "operator" && prev.text === ".") continue;
+    if (declaredNames.has(t.text)) continue;
+    if (KNOWN_BUILTIN_NAMES.has(t.text)) continue;
+    if (implicitDecls.has(t.text)) continue;
+    diagnostics.push({
+      severity: import_node.DiagnosticSeverity.Warning,
+      range: {
+        start: { line: t.line, character: t.start },
+        end: { line: t.line, character: t.start + t.length }
+      },
+      message: `Identifier '${t.text}' is not defined.`,
+      source: "berry"
+    });
+  }
   connection.sendDiagnostics({ uri: doc.uri, diagnostics });
+}
+function collectImplicitDeclarations(tokens) {
+  const implicit = /* @__PURE__ */ new Set();
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t.kind === "identifier") {
+      const prev = tokens[i - 1];
+      const next = tokens[i + 1];
+      if (next && next.kind === "operator" && ASSIGN_OPS.has(next.text)) {
+        if (!prev || !(prev.kind === "operator" && prev.text === ".")) {
+          implicit.add(t.text);
+        }
+      }
+    }
+    if (t.kind === "keyword" && t.text === "for") {
+      let j = i + 1;
+      while (j < tokens.length) {
+        const ft = tokens[j];
+        if (ft.kind === "identifier") {
+          implicit.add(ft.text);
+          j++;
+        } else if (ft.kind === "operator" && ft.text === ",") {
+          j++;
+        } else {
+          break;
+        }
+      }
+    }
+    if (t.kind === "keyword" && t.text === "as") {
+      const next = tokens[i + 1];
+      if (next && next.kind === "identifier") {
+        implicit.add(next.text);
+      }
+    }
+    if (t.kind === "operator" && t.text === "/") {
+      let hasArrow = false;
+      for (let j = i + 1; j < tokens.length && j < i + 10; j++) {
+        if (tokens[j].kind === "operator" && tokens[j].text === "->") {
+          hasArrow = true;
+          break;
+        }
+        if (tokens[j].kind === "identifier" || tokens[j].kind === "operator" && tokens[j].text === ",") continue;
+        break;
+      }
+      if (hasArrow) {
+        let j = i + 1;
+        while (j < tokens.length) {
+          const lt = tokens[j];
+          if (lt.kind === "identifier") {
+            implicit.add(lt.text);
+            j++;
+          } else if (lt.kind === "operator" && lt.text === ",") {
+            j++;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+  }
+  return implicit;
 }
 connection.languages.semanticTokens.on((params) => {
   const doc = documents.get(params.textDocument.uri);
@@ -11201,6 +11289,31 @@ connection.onSignatureHelp((params) => {
     activeSignature: 0,
     activeParameter: Math.min(activeParam, Math.max(0, paramInfos.length - 1))
   };
+});
+connection.onRenameRequest((params) => {
+  const doc = documents.get(params.textDocument.uri);
+  if (!doc) return null;
+  const parsed = getParsed(doc.uri) ?? parseAndCache(doc);
+  const { line, character } = params.position;
+  const tok = tokenAtPosition(parsed.tokens, line, character);
+  if (!tok || tok.kind !== "identifier") return null;
+  const oldName = tok.text;
+  const newName = params.newName.trim();
+  if (!newName || newName === oldName) return null;
+  const edits = [];
+  for (const t of parsed.tokens) {
+    if (t.kind === "identifier" && t.text === oldName) {
+      edits.push(import_node.TextEdit.replace(
+        import_node.Range.create(
+          { line: t.line, character: t.start },
+          { line: t.line, character: t.start + t.length }
+        ),
+        newName
+      ));
+    }
+  }
+  if (edits.length === 0) return null;
+  return { changes: { [doc.uri]: edits } };
 });
 documents.listen(connection);
 connection.listen();

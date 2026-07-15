@@ -420,3 +420,161 @@ describe('textDocument/documentSymbol', () => {
         expect(symbols.some(s => s.name === 'greet')).toBe(true);
     });
 });
+
+// ---------------------------------------------------------------------------
+// Rename
+// ---------------------------------------------------------------------------
+
+describe('textDocument/rename', () => {
+    it('renames all occurrences of a variable (declaration + uses)', async () => {
+        const uri = 'file:///rename_var.be';
+        client.openDocument(uri, 'var x = 10\nprint(x)\nvar z = x + 1\n');
+        await new Promise(r => setTimeout(r, 100));
+
+        const res = await client.request('textDocument/rename', {
+            textDocument: { uri },
+            position: { line: 0, character: 4 }, // cursor on 'x' in 'var x'
+            newName: 'myVar',
+        });
+
+        expect(res.error).toBeUndefined();
+        const edit = res.result as { changes: Record<string, Array<{ newText: string }>> };
+        const edits = edit.changes[uri];
+        expect(edits).toBeDefined();
+        expect(edits.every((e: { newText: string }) => e.newText === 'myVar')).toBe(true);
+        // declaration + 2 uses = 3 edits
+        expect(edits).toHaveLength(3);
+    });
+
+    it('renames a function and all its call sites', async () => {
+        const uri = 'file:///rename_fn.be';
+        client.openDocument(uri, 'def foo()\n  return 1\nend\nvar a = foo()\nvar b = foo()\n');
+        await new Promise(r => setTimeout(r, 100));
+
+        const res = await client.request('textDocument/rename', {
+            textDocument: { uri },
+            position: { line: 0, character: 4 }, // cursor on 'foo' in 'def foo()'
+            newName: 'bar',
+        });
+
+        expect(res.error).toBeUndefined();
+        const edit = res.result as { changes: Record<string, Array<{ newText: string }>> };
+        const edits = edit.changes[uri];
+        expect(edits.every((e: { newText: string }) => e.newText === 'bar')).toBe(true);
+        // declaration + 2 calls = 3 edits
+        expect(edits).toHaveLength(3);
+    });
+
+    it('returns null when cursor is not on an identifier', async () => {
+        const uri = 'file:///rename_noident.be';
+        client.openDocument(uri, 'var x = 10\n');
+        await new Promise(r => setTimeout(r, 100));
+
+        const res = await client.request('textDocument/rename', {
+            textDocument: { uri },
+            position: { line: 0, character: 6 }, // cursor on '=' operator
+            newName: 'y',
+        });
+
+        // Server returns null; some clients surface this as an error, some as null result
+        expect(res.error !== undefined || res.result === null).toBe(true);
+    });
+
+    it('renames a class and all its references', async () => {
+        const uri = 'file:///rename_cls.be';
+        client.openDocument(uri, 'class Foo\nend\nvar f = Foo()\n');
+        await new Promise(r => setTimeout(r, 100));
+
+        const res = await client.request('textDocument/rename', {
+            textDocument: { uri },
+            position: { line: 0, character: 6 }, // cursor on 'Foo'
+            newName: 'Bar',
+        });
+
+        expect(res.error).toBeUndefined();
+        const edit = res.result as { changes: Record<string, Array<{ newText: string }>> };
+        const edits = edit.changes[uri];
+        expect(edits.every((e: { newText: string }) => e.newText === 'Bar')).toBe(true);
+        expect(edits).toHaveLength(2); // declaration + constructor call
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Undefined identifier diagnostics
+// ---------------------------------------------------------------------------
+
+describe('undefined identifier diagnostics', () => {
+    it('emits no warnings for fully declared code', async () => {
+        const uri = 'file:///undef_ok.be';
+        const promise = client.collectNotifications('textDocument/publishDiagnostics');
+        client.openDocument(uri, 'var x = 10\nprint(x)\n');
+        const notifications = await promise;
+        const diag = notifications.find(n => (n.params as { uri: string }).uri === uri);
+        const diagnostics = (diag!.params as { diagnostics: Array<{ message: string }> }).diagnostics;
+        expect(diagnostics.filter(d => d.message.includes('is not defined'))).toHaveLength(0);
+    });
+
+    it('emits a warning for an undeclared identifier', async () => {
+        const uri = 'file:///undef_warn.be';
+        const promise = client.collectNotifications('textDocument/publishDiagnostics');
+        client.openDocument(uri, 'print(undeclaredVar)\n');
+        const notifications = await promise;
+        const diag = notifications.find(n => (n.params as { uri: string }).uri === uri);
+        const diagnostics = (diag!.params as { diagnostics: Array<{ message: string; severity: number }> }).diagnostics;
+        const undef = diagnostics.filter(d => d.message.includes("'undeclaredVar' is not defined"));
+        expect(undef).toHaveLength(1);
+        expect(undef[0].severity).toBe(2); // DiagnosticSeverity.Warning = 2
+    });
+
+    it('does not warn for a built-in global function', async () => {
+        const uri = 'file:///undef_builtin.be';
+        const promise = client.collectNotifications('textDocument/publishDiagnostics');
+        client.openDocument(uri, 'print("hello")\nvar t = type(42)\n');
+        const notifications = await promise;
+        const diag = notifications.find(n => (n.params as { uri: string }).uri === uri);
+        const diagnostics = (diag!.params as { diagnostics: Array<{ message: string }> }).diagnostics;
+        expect(diagnostics.filter(d => d.message.includes('is not defined'))).toHaveLength(0);
+    });
+
+    it('does not warn for an import module name', async () => {
+        const uri = 'file:///undef_import.be';
+        const promise = client.collectNotifications('textDocument/publishDiagnostics');
+        client.openDocument(uri, 'import math\nvar s = math.sin(1.0)\n');
+        const notifications = await promise;
+        const diag = notifications.find(n => (n.params as { uri: string }).uri === uri);
+        const diagnostics = (diag!.params as { diagnostics: Array<{ message: string }> }).diagnostics;
+        expect(diagnostics.filter(d => d.message.includes('is not defined'))).toHaveLength(0);
+    });
+
+    it('does not warn for member accesses after a dot', async () => {
+        const uri = 'file:///undef_member.be';
+        const promise = client.collectNotifications('textDocument/publishDiagnostics');
+        client.openDocument(uri, 'var lst = [1,2,3]\nvar n = lst.size()\n');
+        const notifications = await promise;
+        const diag = notifications.find(n => (n.params as { uri: string }).uri === uri);
+        const diagnostics = (diag!.params as { diagnostics: Array<{ message: string }> }).diagnostics;
+        // 'size' after '.' should NOT be flagged
+        expect(diagnostics.filter(d => d.message.includes("'size' is not defined"))).toHaveLength(0);
+    });
+
+    it('does not warn for implicit assignment targets', async () => {
+        const uri = 'file:///undef_assign.be';
+        const promise = client.collectNotifications('textDocument/publishDiagnostics');
+        client.openDocument(uri, 'x = 5\nprint(x)\n');
+        const notifications = await promise;
+        const diag = notifications.find(n => (n.params as { uri: string }).uri === uri);
+        const diagnostics = (diag!.params as { diagnostics: Array<{ message: string }> }).diagnostics;
+        expect(diagnostics.filter(d => d.message.includes("'x' is not defined"))).toHaveLength(0);
+    });
+
+    it('does not warn for for-loop variables', async () => {
+        const uri = 'file:///undef_forloop.be';
+        const promise = client.collectNotifications('textDocument/publishDiagnostics');
+        client.openDocument(uri, 'for i: 0..5\n  print(i)\nend\n');
+        const notifications = await promise;
+        const diag = notifications.find(n => (n.params as { uri: string }).uri === uri);
+        const diagnostics = (diag!.params as { diagnostics: Array<{ message: string }> }).diagnostics;
+        expect(diagnostics.filter(d => d.message.includes("'i' is not defined"))).toHaveLength(0);
+    });
+});
+
