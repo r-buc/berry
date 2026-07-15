@@ -224,6 +224,7 @@ function parseDocument(text) {
     const tokens = tokenize(text);
     const symbols = [];
     const blockStack = [];
+    const spuriousEnds = [];
     // Track the "current class" context
     const classStack = [];
     let i = 0;
@@ -471,6 +472,10 @@ function parseDocument(text) {
                     classStack.pop();
                 }
             }
+            else {
+                // Spurious 'end' with no matching opener
+                spuriousEnds.push({ line: token.line, character: token.start });
+            }
             i++;
             continue;
         }
@@ -484,7 +489,7 @@ function parseDocument(text) {
         e.keyword === 'for' || e.keyword === 'do' ||
         e.keyword === 'try')
         .map(e => ({ keyword: e.keyword, line: e.line, character: e.character }));
-    return { tokens, symbols, unmatchedBlocks };
+    return { tokens, symbols, unmatchedBlocks, spuriousEnds };
 }
 // ---------------------------------------------------------------------------
 // Position utilities

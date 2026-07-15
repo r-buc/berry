@@ -49,7 +49,11 @@
                 "berry.trace.server": {
                     "scope": "window",
                     "type": "string",
-                    "enum": ["off", "messages", "verbose"],
+                    "enum": [
+                        "off",
+                        "messages",
+                        "verbose"
+                    ],
                     "default": "off",
                     "description": "Traces the communication between VS Code and the Berry language server."
                 },
@@ -68,12 +72,24 @@
         "vscode-languageserver-textdocument": "^1.0.11"
     },
     "devDependencies": {
+        "@types/jest": "^30.0.0",
         "@types/node": "^20.0.0",
         "@types/vscode": "^1.74.0",
+        "jest": "^30.4.2",
+        "ts-jest": "^29.4.11",
         "typescript": "^5.0.0"
     },
     "scripts": {
         "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./"
+        "watch": "tsc -watch -p ./",
+        "test": "jest"
+    },
+    "jest": {
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "testMatch": ["**/test/**/*.test.ts"],
+        "transform": {
+            "^.+\\.ts$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
+        }
     }
 }

@@ -273,8 +273,10 @@ export interface SymbolInfo {
 export interface ParsedDocument {
     tokens: Token[];
     symbols: SymbolInfo[];
-    /** Unmatched block openers, used for diagnostics */
+    /** Unmatched block openers (missing `end`), used for diagnostics */
     unmatchedBlocks: Array<{ keyword: string; line: number; character: number }>;
+    /** Spurious `end` keywords with no matching opener, used for diagnostics */
+    spuriousEnds: Array<{ line: number; character: number }>;
 }
 
 // Keywords that open a new block scope and need a matching `end`
@@ -298,6 +300,7 @@ export function parseDocument(text: string): ParsedDocument {
         symbolIndex: number | null;
     }
     const blockStack: StackEntry[] = [];
+    const spuriousEnds: Array<{ line: number; character: number }> = [];
 
     // Track the "current class" context
     const classStack: string[] = [];
@@ -543,6 +546,9 @@ export function parseDocument(text: string): ParsedDocument {
                 if (top.keyword === 'class' && classStack.length > 0) {
                     classStack.pop();
                 }
+            } else {
+                // Spurious 'end' with no matching opener
+                spuriousEnds.push({ line: token.line, character: token.start });
             }
             i++;
             continue;
@@ -560,7 +566,7 @@ export function parseDocument(text: string): ParsedDocument {
                      e.keyword === 'try')
         .map(e => ({ keyword: e.keyword, line: e.line, character: e.character }));
 
-    return { tokens, symbols, unmatchedBlocks };
+    return { tokens, symbols, unmatchedBlocks, spuriousEnds };
 }
 
 // ---------------------------------------------------------------------------

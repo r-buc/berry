@@ -224,6 +224,19 @@ async function validateDocument(doc: TextDocument): Promise<void> {
         });
     }
 
+    // Report spurious 'end' keywords (no matching opener)
+    for (const spurious of parsed.spuriousEnds) {
+        diagnostics.push({
+            severity: DiagnosticSeverity.Error,
+            range: {
+                start: { line: spurious.line, character: spurious.character },
+                end:   { line: spurious.line, character: spurious.character + 3 }, // 'end'.length === 3
+            },
+            message: `Unexpected 'end': no matching block opener.`,
+            source: 'berry',
+        });
+    }
+
     // Report unclosed strings: any string token that ends at the same position
     // it started (i.e., opening quote with no closing quote on the same line)
     for (const tok of parsed.tokens) {
@@ -756,7 +769,7 @@ connection.onReferences((params: ReferenceParams): Location[] => {
 
     for (const t of parsed.tokens) {
         if (t.kind === 'identifier' && t.text === word) {
-            if (!params.context.includeDeclaration) {
+            if (!(params.context?.includeDeclaration ?? true)) {
                 // Skip if it's a declaration token
                 const isDecl = parsed.symbols.some(
                     s => s.name === word && s.line === t.line && s.character === t.start,
