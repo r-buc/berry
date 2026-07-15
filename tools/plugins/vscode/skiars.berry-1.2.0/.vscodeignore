@@ -1,2 +1,6 @@
 .vsixmanifest
 *.vsix
+src/
+tsconfig.json
+node_modules/
+out/**/*.map
