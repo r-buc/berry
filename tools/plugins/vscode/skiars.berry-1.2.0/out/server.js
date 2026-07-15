@@ -10761,8 +10761,9 @@ function collectImplicitDeclarations(tokens) {
       }
     }
     if (t.kind === "operator" && t.text === "/") {
+      const LAMBDA_LOOKAHEAD_LIMIT = 10;
       let hasArrow = false;
-      for (let j = i + 1; j < tokens.length && j < i + 10; j++) {
+      for (let j = i + 1; j < tokens.length && j < i + LAMBDA_LOOKAHEAD_LIMIT; j++) {
         if (tokens[j].kind === "operator" && tokens[j].text === "->") {
           hasArrow = true;
           break;

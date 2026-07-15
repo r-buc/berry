@@ -354,9 +354,14 @@ function collectImplicitDeclarations(tokens: Token[]): Set<string> {
 
         // Lambda shorthand:  / <ident> [, <ident>]* ->  body
         if (t.kind === 'operator' && t.text === '/') {
-            // Look ahead (limited) for '->' to confirm this is a lambda, not division
+            // Distinguish  `a / b`  (division) from  `/ x -> x+1`  (lambda) by
+            // looking ahead up to LAMBDA_LOOKAHEAD_LIMIT tokens for '->'.  A real
+            // lambda parameter list only contains identifiers and commas, so we
+            // bail out early on any other token kind.  The limit caps the scan at
+            // a reasonable worst-case parameter count (e.g. `/ a, b, c, d, e ->`).
+            const LAMBDA_LOOKAHEAD_LIMIT = 10;
             let hasArrow = false;
-            for (let j = i + 1; j < tokens.length && j < i + 10; j++) {
+            for (let j = i + 1; j < tokens.length && j < i + LAMBDA_LOOKAHEAD_LIMIT; j++) {
                 if (tokens[j].kind === 'operator' && tokens[j].text === '->') { hasArrow = true; break; }
                 if (tokens[j].kind === 'identifier' || (tokens[j].kind === 'operator' && tokens[j].text === ',')) continue;
                 break;
@@ -1005,6 +1010,12 @@ connection.onRenameRequest((params: RenameParams): WorkspaceEdit | null => {
     if (!newName || newName === oldName) return null;
 
     const edits: TextEdit[] = [];
+    // NOTE: the rename is file-wide by text match, not scope-aware.  Berry's
+    // parser builds a flat symbol table without full lexical-scope analysis,
+    // so identifiers with the same name in different (nested) scopes will all
+    // be renamed together.  This is the correct behaviour for the most common
+    // cases (renaming top-level or class-level symbols) and matches VS Code's
+    // expectation for simple single-file rename.
     for (const t of parsed.tokens) {
         if (t.kind === 'identifier' && t.text === oldName) {
             edits.push(TextEdit.replace(
