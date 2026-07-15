@@ -13,7 +13,9 @@
     "engines": {
         "vscode": "^1.74.0"
     },
-    "activationEvents": [],
+    "activationEvents": [
+        "onLanguage:berry"
+    ],
     "categories": [
         "Programming Languages"
     ],
