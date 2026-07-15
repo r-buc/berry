@@ -1,0 +1,15 @@
+# Runtime dependencies (install with `npm install`)
+node_modules/
+
+# Compiled output — keep out/*.js and out/*.d.ts but ignore source maps
+out/**/*.map
+
+# Extension package archives
+*.vsix
+.vsixmanifest
+
+# VS Code test infrastructure
+.vscode-test/
+
+# TypeScript incremental build cache
+*.tsbuildinfo

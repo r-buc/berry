@@ -1,15 +1,15 @@
 {
     "name": "berry",
     "displayName": "Berry Script Language",
-    "description": "A small embedded script language.",
-    "version": "1.2.0",
+    "description": "Berry language support with a full-featured language server (completion, hover, diagnostics, go-to-definition, and more).",
+    "version": "2.0.0",
     "repository": {
         "type": "git",
         "url": "https://github.com/r-buc/berry.git"
     },
     "icon": "berry-icon.png",
     "publisher": "skiars",
-    "main": "./extension.js",
+    "main": "./out/extension.js",
     "engines": {
         "vscode": "^1.74.0"
     },
@@ -44,7 +44,61 @@
             "[berry]": {
                 "editor.semanticHighlighting.enabled": true
             }
+        },
+        "configuration": {
+            "title": "Berry",
+            "properties": {
+                "berry.trace.server": {
+                    "scope": "window",
+                    "type": "string",
+                    "enum": [
+                        "off",
+                        "messages",
+                        "verbose"
+                    ],
+                    "default": "off",
+                    "description": "Traces the communication between VS Code and the Berry language server."
+                },
+                "berry.diagnostics.enabled": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable or disable Berry diagnostics (warnings and errors)."
+                }
+            }
         }
     },
-    "__metadata": null
+    "devDependencies": {
+        "@types/jest": "^30.0.0",
+        "@types/node": "^20.0.0",
+        "@types/vscode": "^1.74.0",
+        "esbuild": "^0.28.1",
+        "jest": "^30.4.2",
+        "ts-jest": "^29.4.11",
+        "typescript": "^5.0.0",
+        "vscode-languageclient": "^9.0.1",
+        "vscode-languageserver": "^9.0.1",
+        "vscode-languageserver-textdocument": "^1.0.11"
+    },
+    "scripts": {
+        "esbuild-base": "esbuild src/extension.ts src/server.ts --bundle --outdir=out --external:vscode --format=cjs --platform=node",
+        "compile": "npm run esbuild-base",
+        "watch": "npm run esbuild-base -- --watch",
+        "test": "jest"
+    },
+    "jest": {
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "testMatch": [
+            "**/test/**/*.test.ts"
+        ],
+        "transform": {
+            "^.+\\.ts$": [
+                "ts-jest",
+                {
+                    "tsconfig": "tsconfig.json"
+                }
+            ]
+        }
+    }
 }
