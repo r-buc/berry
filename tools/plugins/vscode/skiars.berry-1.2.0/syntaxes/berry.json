@@ -18,6 +18,9 @@
             "include": "#keywords"
         },
         {
+            "include": "#constants"
+        },
+        {
             "include": "#function"
         },
         {
@@ -51,8 +54,7 @@
                             "end": "\"",
                             "patterns": [
                                 {
-                                    "name": "constant.character.escape.berry",
-                                    "match": "(\\\\x[\\h]{2})|(\\\\[0-7]{3})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
+                                    "include": "#escape-sequence"
                                 },
                                 {
                                     "name": "string.quoted.other.berry",
@@ -67,7 +69,10 @@
                                             "include": "#keywords"
                                         },
                                         {
-                                            "include": "#numbers"
+                                            "include": "#constants"
+                                        },
+                                        {
+                                            "include": "#number"
                                         },
                                         {
                                             "include": "#identifier"
@@ -91,8 +96,7 @@
                             "end": "'",
                             "patterns": [
                                 {
-                                "name": "constant.character.escape.berry",
-                                "match": "(\\\\x[\\h]{2})|(\\\\[0-7]{3})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
+                                "include": "#escape-sequence"
                                 },
                                 {
                                     "name": "string.quoted.other.berry",
@@ -107,7 +111,10 @@
                                             "include": "#keywords"
                                         },
                                         {
-                                            "include": "#numbers"
+                                            "include": "#constants"
+                                        },
+                                        {
+                                            "include": "#number"
                                         },
                                         {
                                             "include": "#identifier"
@@ -132,11 +139,50 @@
                     "begin": "(\"|')",
                     "end": "\\1",
                     "patterns": [{
-                        "name": "constant.character.escape.berry",
-                        "match": "(\\\\x[\\h]{2})|(\\\\[0-7]{3})|(\\\\\\\\)|(\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
+                        "include": "#escape-sequence"
                     }]
                 }
             ]
+        },
+        "escape-sequence": {
+            "patterns": [
+                {
+                    "include": "#escape-hex"
+                },
+                {
+                    "include": "#escape-octal"
+                },
+                {
+                    "include": "#escape-unicode"
+                },
+                {
+                    "include": "#escape-special"
+                }
+            ]
+        },
+        "escape-hex": {
+            "patterns": [{
+                "name": "constant.character.escape.berry",
+                "match": "\\\\x[0-9A-Fa-f]{2}"
+            }]
+        },
+        "escape-octal": {
+            "patterns": [{
+                "name": "constant.character.escape.berry",
+                "match": "\\\\[0-7]{3}"
+            }]
+        },
+        "escape-unicode": {
+            "patterns": [{
+                "name": "constant.character.escape.berry",
+                "match": "\\\\u[0-9A-Fa-f]{4}"
+            }]
+        },
+        "escape-special": {
+            "patterns": [{
+                "name": "constant.character.escape.berry",
+                "match": "\\\\[\\\\\"'abfnrtv]"
+            }]
         },
         "comment-block": {
             "name": "comment.berry",
@@ -153,25 +199,31 @@
         "keywords": {
             "patterns": [{
                 "name": "keyword.berry",
-                "match": "\\b(var|static|def|class|true|false|nil|self|super|import|as|_class)\\b"
+                "match": "\\b(var|static|def|class|import|as|_class)\\b"
+            }]
+        },
+        "constants": {
+            "patterns": [{
+                "name": "constant.language.berry",
+                "match": "\\b(true|false|nil|self|super)\\b"
             }]
         },
         "identifier": {
             "patterns": [{
                 "name": "identifier.berry",
-                "match": "\\b[_A-Za-z]\\w+\\b"
+                "match": "(?<![A-Za-z0-9_])[_A-Za-z][A-Za-z0-9_]*(?![A-Za-z0-9_])"
             }]
         },
         "number": {
             "patterns": [{
                 "name": "constant.numeric.berry",
-                "match": "0x[a-fA-F0-9]+|\\d+|(\\d+\\.?|\\.\\d)\\d*([eE][+-]?\\d+)?"
+                "match": "(?<![A-Za-z0-9_])(?:0[xX][a-fA-F0-9]+|(?:\\d+\\.\\d*|\\.\\d+|\\d+)(?:[eE][+-]?\\d+)?)(?![A-Za-z0-9_])"
             }]
         },
         "operator": {
             "patterns": [{
                 "name": "keyword.operator.berry",
-                "match": "\\(|\\)|\\[|\\]|\\.|-|\\!|~|\\*|/|%|\\+|&|\\^|\\||<|>|=|:"
+                "match": "<<=|>>=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|==|!=|<=|>=|<<|>>|\\|\\||&&|\\.\\.|:=|->|[\\(\\)\\[\\]\\{\\}\\.\\-!~\\*/%\\+&\\^\\|<>=:,;\\?]"
             }]
         },
         "member": {

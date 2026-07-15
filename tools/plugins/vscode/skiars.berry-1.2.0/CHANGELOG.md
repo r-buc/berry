@@ -8,3 +8,4 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - add support for f-strings, `_class` and indent on `do`
 - add support for multiline f-strings
 - remove bytecode
+- add semantic highlighting provider for Berry tokens
