@@ -114,9 +114,6 @@ function tokenizeDocument(text) {
                         break;
                     }
                     escaped = !escaped && c === "\\";
-                    if (escaped && c !== "\\") {
-                        escaped = false;
-                    }
                     j++;
                 }
                 tokens.push({ kind: "string", line: lineIndex, start: i, length: j - i });
@@ -135,9 +132,6 @@ function tokenizeDocument(text) {
                         break;
                     }
                     escaped = !escaped && c === "\\";
-                    if (escaped && c !== "\\") {
-                        escaped = false;
-                    }
                     j++;
                 }
                 tokens.push({ kind: "string", line: lineIndex, start: i, length: j - i });
